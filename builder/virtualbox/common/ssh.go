@@ -16,6 +16,11 @@ func SSHPort(state multistep.StateBag) (int, error) {
 	return int(sshHostPort), nil
 }
 
+func WinRMPort(state multistep.StateBag) (int, error) {
+	winRMHostPort := state.Get("sshHostPort").(uint)
+	return int(winRMHostPort), nil
+}
+
 func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConfig, error) {
 	return func(state multistep.StateBag) (*gossh.ClientConfig, error) {
 		auth := []gossh.AuthMethod{

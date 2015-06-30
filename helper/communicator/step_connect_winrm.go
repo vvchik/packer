@@ -25,6 +25,7 @@ type StepConnectWinRM struct {
 	Config      *Config
 	Host        func(multistep.StateBag) (string, error)
 	WinRMConfig func(multistep.StateBag) (*WinRMConfig, error)
+	WinRMPort   func(multistep.StateBag) (int, error)
 }
 
 func (s *StepConnectWinRM) Run(state multistep.StateBag) multistep.StepAction {
@@ -95,7 +96,15 @@ func (s *StepConnectWinRM) waitForWinRM(state multistep.StateBag, cancel <-chan 
 			log.Printf("[DEBUG] Error getting WinRM host: %s", err)
 			continue
 		}
+		
 		port := s.Config.WinRMPort
+		if s.WinRMPort != nil {
+			port, err = s.WinRMPort(state)
+			if err != nil {
+				log.Printf("[DEBUG] Error getting WinRM port: %s", err)
+				continue
+			}
+		}		
 
 		user := s.Config.WinRMUser
 		password := s.Config.WinRMPassword
