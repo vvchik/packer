@@ -33,23 +33,23 @@ func (s *StepForwardSSH) Run(state multistep.StateBag) multistep.StepAction {
 	vmName := state.Get("vmName").(string)
 
 	guestPort := s.CommConfig.Port()
-	sshHostPort := guestPort
+	sshHostPort := uint(guestPort)
 	if !s.SkipNatMapping {
 		log.Printf("Looking for available SSH port between %d and %d",
 			s.HostPortMin, s.HostPortMax)
-		offset := 0
+		offset := uint(0)
 
 		portRange := int(s.HostPortMax - s.HostPortMin)
 		if portRange > 0 {
 			// Have to check if > 0 to avoid a panic
-			offset = rand.Intn(portRange)
+			offset = uint(rand.Intn(portRange))
 		}
 
 		for {
-			sshHostPort = offset + int(s.HostPortMin)
-			if sshHostPort >= int(s.HostPortMax) {
+			sshHostPort = offset + s.HostPortMin
+			if sshHostPort >= s.HostPortMax {
 				offset = 0
-				sshHostPort = int(s.HostPortMin)
+				sshHostPort = s.HostPortMin
 			}
 			log.Printf("Trying port: %d", sshHostPort)
 			l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", sshHostPort))
