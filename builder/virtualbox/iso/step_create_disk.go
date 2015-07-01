@@ -21,7 +21,7 @@ func (s *stepCreateDisk) Run(state multistep.StateBag) multistep.StepAction {
 	vmName := state.Get("vmName").(string)
 
 	format := "VDI"
-	path := filepath.Join(config.OutputDir, fmt.Sprintf("%s.%s", config.VMName, strings.ToLower(format)))
+	path := filepath.Join(config.OutputDir, fmt.Sprintf("%s.%s", vmName, strings.ToLower(format)))
 
 	command := []string{
 		"createhd",

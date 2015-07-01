@@ -98,7 +98,6 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 		},
 		&vboxcommon.StepTypeBootCommand{
 			BootCommand: b.config.BootCommand,
-			VMName:      b.config.VMName,
 			Ctx:         b.config.ctx,
 		},
 		&communicator.StepConnect{

@@ -33,7 +33,6 @@ type bootCommandTemplateData struct {
 //   <nothing>
 type StepTypeBootCommand struct {
 	BootCommand []string
-	VMName      string
 	Ctx         interpolate.Context
 }
 
