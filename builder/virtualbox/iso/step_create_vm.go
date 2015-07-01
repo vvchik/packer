@@ -6,23 +6,31 @@ import (
 	vboxcommon "github.com/mitchellh/packer/builder/virtualbox/common"
 	"github.com/mitchellh/packer/packer"
 	"time"
+	"github.com/mitchellh/packer/template/interpolate"
 )
 
 // This step creates the actual virtual machine.
 //
 // Produces:
-//   vmName string - The name of the VM
-type stepCreateVM struct {
-	vmName string
+//   VMName string - The name of the VM
+type StepCreateVM struct {
+	VMName string
+	Ctx    interpolate.Context
 }
 
-func (s *stepCreateVM) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepCreateVM) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
 	driver := state.Get("driver").(vboxcommon.Driver)
 	ui := state.Get("ui").(packer.Ui)
 
-	name := config.VMName
-
+	name, err := interpolate.Render(s.VMName, &s.Ctx)
+	if err != nil {
+		err := fmt.Errorf("Error preparing vm name: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+	
 	commands := make([][]string, 4)
 	commands[0] = []string{
 		"createvm", "--name", name,
@@ -46,19 +54,19 @@ func (s *stepCreateVM) Run(state multistep.StateBag) multistep.StepAction {
 		}
 
 		// Set the VM name property on the first command
-		if s.vmName == "" {
-			s.vmName = name
+		if s.VMName == "" {
+			s.VMName = name
 		}
 	}
 
 	// Set the final name in the state bag so others can use it
-	state.Put("vmName", s.vmName)
+	state.Put("vmName", name)
 
 	return multistep.ActionContinue
 }
 
-func (s *stepCreateVM) Cleanup(state multistep.StateBag) {
-	if s.vmName == "" {
+func (s *StepCreateVM) Cleanup(state multistep.StateBag) {
+	if s.VMName == "" {
 		return
 	}
 
@@ -68,7 +76,7 @@ func (s *stepCreateVM) Cleanup(state multistep.StateBag) {
 	ui.Say("Unregistering and deleting virtual machine...")
 	var err error = nil
 	for i := 0; i < 5; i++ {
-		err = driver.VBoxManage("unregistervm", s.vmName, "--delete")
+		err = driver.VBoxManage("unregistervm", s.VMName, "--delete")
 		if err == nil {
 			break
 		}

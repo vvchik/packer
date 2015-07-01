@@ -46,7 +46,7 @@ func (s *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction
 	s.Ctx.Data = &bootCommandTemplateData{
 		"10.0.2.2",
 		httpPort,
-		s.VMName,
+		vmName,
 	}
 
 	ui.Say("Typing the boot command...")

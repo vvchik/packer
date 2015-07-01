@@ -246,7 +246,10 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 			HTTPPortMax: b.config.HTTPPortMax,
 		},
 		new(vboxcommon.StepSuppressMessages),
-		new(stepCreateVM),
+		&StepCreateVM{
+			VMName  : b.config.VMName,
+			Ctx		: b.config.ctx,
+		},		
 		new(stepCreateDisk),
 		new(stepAttachISO),
 		&vboxcommon.StepAttachGuestAdditions{
