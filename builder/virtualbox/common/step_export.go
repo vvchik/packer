@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"os"
 )
 
 // This step cleans up forwarded ports and exports the VM to an OVF.
@@ -68,6 +69,28 @@ func (s *StepExport) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionHalt
 	}
 
+	//Drop VDI if there is a VMDK
+	format := "VMDK"
+	path := filepath.Join(s.OutputDir, fmt.Sprintf("%s.%s", vmName, strings.ToLower(format)))	
+	
+	if _, err := os.Stat(path); err == nil {
+		format = "VDI"
+		path = filepath.Join(s.OutputDir, fmt.Sprintf("%s.%s", vmName, strings.ToLower(format)))
+		
+		if _, err := os.Stat(path); err == nil {
+		    ui.Say(fmt.Sprintf("Removing VDI as VMDK exists... %s", path))
+			
+			err := os.Remove(path)
+			
+			if err != nil {
+				err := fmt.Errorf("Error deleting VDI: %s", err)
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}		
+		}
+	}
+	
 	state.Put("exportPath", outputPath)
 
 	return multistep.ActionContinue
