@@ -19,25 +19,6 @@ import (
 	"github.com/pierrec/lz4"
 )
 
-type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
-
-	// Fields from config file
-	OutputPath        string `mapstructure:"output"`
-	CompressionLevel  int    `mapstructure:"compression_level"`
-	KeepInputArtifact bool   `mapstructure:"keep_input_artifact"`
-
-	// Derived fields
-	Archive   string
-	Algorithm string
-
-	ctx *interpolate.Context
-}
-
-type PostProcessor struct {
-	config *Config
-}
-
 var (
 	// ErrInvalidCompressionLevel is returned when the compression level passed
 	// to gzip is not in the expected range. See compress/flate for details.
@@ -50,9 +31,29 @@ var (
 	filenamePattern = regexp.MustCompile(`(?:\.([a-z0-9]+))`)
 )
 
+type Config struct {
+	common.PackerConfig `mapstructure:",squash"`
+
+	// Fields from config file
+	OutputPath        string `mapstructure:"output"`
+	CompressionLevel  int    `mapstructure:"compression_level"`
+	KeepInputArtifact bool   `mapstructure:"keep_input_artifact"`
+
+	// Derived fields
+	Archive   string
+	Algorithm string
+
+	ctx interpolate.Context
+}
+
+type PostProcessor struct {
+	config Config
+}
+
 func (p *PostProcessor) Configure(raws ...interface{}) error {
 	err := config.Decode(&p.config, &config.DecodeOpts{
-		Interpolate: true,
+		Interpolate:        true,
+		InterpolateContext: &p.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{},
 		},
@@ -69,7 +70,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 		p.config.OutputPath = "packer_{{.BuildName}}_{{.Provider}}"
 	}
 
-	if err = interpolate.Validate(p.config.OutputPath, p.config.ctx); err != nil {
+	if err = interpolate.Validate(p.config.OutputPath, &p.config.ctx); err != nil {
 		errs = packer.MultiErrorAppend(
 			errs, fmt.Errorf("Error parsing target template: %s", err))
 	}
@@ -94,7 +95,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 				errs, fmt.Errorf("%s must be set", key))
 		}
 
-		*ptr, err = interpolate.Render(p.config.OutputPath, p.config.ctx)
+		*ptr, err = interpolate.Render(p.config.OutputPath, &p.config.ctx)
 		if err != nil {
 			errs = packer.MultiErrorAppend(
 				errs, fmt.Errorf("Error processing %s: %s", key, err))
@@ -108,7 +109,6 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 	}
 
 	return nil
-
 }
 
 func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, error) {

@@ -58,7 +58,8 @@ type Config struct {
 
 func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 	err := config.Decode(&b.config, &config.DecodeOpts{
-		Interpolate: true,
+		Interpolate:        true,
+		InterpolateContext: &b.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{
 				"boot_command",
@@ -113,7 +114,8 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 	}
 
 	if b.config.VMName == "" {
-		b.config.VMName = fmt.Sprintf("packer-%s-{{timestamp}}", b.config.PackerBuildName)
+		b.config.VMName = fmt.Sprintf(
+			"packer-%s-%d", b.config.PackerBuildName, interpolate.InitTime.Unix())
 	}
 
 	if b.config.HardDriveInterface != "ide" && b.config.HardDriveInterface != "sata" && b.config.HardDriveInterface != "scsi" {

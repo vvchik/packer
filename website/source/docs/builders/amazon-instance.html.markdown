@@ -36,6 +36,10 @@ There are many configuration options available for the builder. They are
 segmented below into two categories: required and optional parameters. Within
 each category, the available configuration keys are alphabetized.
 
+In addition to the options listed here, a
+[communicator](/docs/templates/communicator.html)
+can be configured for this builder.
+
 ### Required:
 
 * `access_key` (string) - The access key used to communicate with AWS.
@@ -83,22 +87,22 @@ each category, the available configuration keys are alphabetized.
 * `ami_block_device_mappings` (array of block device mappings) - Add the block
   device mappings to the AMI. The block device mappings allow for keys:
 
-  - `device_name` (string) – The device name exposed to the instance (for
+  - `device_name` (string) - The device name exposed to the instance (for
       example, "/dev/sdh" or "xvdh")
-  - `virtual_name` (string) – The virtual device name. See the documentation on
+  - `virtual_name` (string) - The virtual device name. See the documentation on
           [Block Device Mapping][1] for more information
-  - `snapshot_id` (string) – The ID of the snapshot
-  - `volume_type` (string) – The volume type. gp2 for General Purpose (SSD)
+  - `snapshot_id` (string) - The ID of the snapshot
+  - `volume_type` (string) - The volume type. gp2 for General Purpose (SSD)
   volumes, io1 for Provisioned IOPS (SSD) volumes, and standard for Magnetic
   volumes
-  - `volume_size` (integer) – The size of the volume, in GiB. Required if not
+  - `volume_size` (integer) - The size of the volume, in GiB. Required if not
       specifying a `snapshot_id`
-  - `delete_on_termination` (boolean) – Indicates whether the EBS volume is
+  - `delete_on_termination` (boolean) - Indicates whether the EBS volume is
       deleted on instance termination
-  - `encrypted` (boolean) – Indicates whether to encrypt the volume or not
-  - `no_device` (boolean) – Suppresses the specified device included in the
+  - `encrypted` (boolean) - Indicates whether to encrypt the volume or not
+  - `no_device` (boolean) - Suppresses the specified device included in the
        block device mapping of the AMI
-  - `iops` (integer) – The number of I/O operations per second (IOPS) that the
+  - `iops` (integer) - The number of I/O operations per second (IOPS) that the
   volume supports. See the documentation on [IOPs][2] for more information
 
 * `ami_description` (string) - The description to set for the resulting
@@ -151,7 +155,7 @@ each category, the available configuration keys are alphabetized.
 * `enhanced_networking` (boolean) - Enable enhanced networking (SriovNetSupport) on
   HVM-compatible AMIs. If true, add `ec2:ModifyInstanceAttribute` to your AWS IAM policy.
 
-* `force_deregister` (boolean) – Force Packer to first deregister an existing
+* `force_deregister` (boolean) - Force Packer to first deregister an existing
 AMI if one with the same name already exists. Default `false`.
 
 * `iam_instance_profile` (string) - The name of an
@@ -193,19 +197,8 @@ AMI if one with the same name already exists. Default `false`.
   generate a temporary keypair. `ssh_private_key_file` must be specified
   with this.
 
-* `ssh_port` (integer) - The port that SSH will be available on. This defaults
-  to port 22.
-
-* `ssh_private_key_file` (string) - Use this ssh private key file instead of
-  a generated ssh key pair for connecting to the instance. This key file must
-  already exist on the `source_ami`
-
-* `ssh_private_ip` (bool) - If true, then SSH will always use the private
+* `ssh_private_ip` (boolean) - If true, then SSH will always use the private
   IP if available.
-
-* `ssh_timeout` (string) - The time to wait for SSH to become available
-  before timing out. The format of this value is a duration such as "5s"
-  or "5m". The default SSH timeout is "5m", or five minutes.
 
 * `subnet_id` (string) - If using VPC, the ID of the subnet, such as
   "subnet-12345def", where Packer will launch the EC2 instance. This field is

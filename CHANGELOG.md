@@ -1,4 +1,36 @@
-## 0.8.0 (unreleased)
+## 0.8.1 (July 2, 2015)
+
+IMPROVEMENTS:
+
+  * builder/amazon: When debug mode is enabled, the Windows administrator
+      password for Windows instances will be shown [GH-2351]
+
+BUG FIXES:
+
+  * core: `min_packer_version`  field in configs work [GH-2356]
+  * core: The `build_name` and `build_type` functions work in provisioners [GH-2367]
+  * core: Handle timeout in SSH handshake [GH-2333]
+  * command/build: Fix reading configuration from stdin [GH-2366]
+  * builder/amazon: Fix issue with sharing AMIs when using `ami_users` [GH-2308]
+  * builder/amazon: Fix issue when using multiple Security Groups [GH-2381]
+  * builder/amazon: Fix for tag creation when creating new ec2 instance [GH-2317]
+  * builder/amazon: Fix issue with creating AMIs with multiple device mappings [GH-2320]
+  * builder/amazon: Fix failing AMI snapshot tagging when copying to other
+      regions [GH-2316]
+  * builder/amazon: Fix setting AMI launch permissions [GH-2348]
+  * builder/amazon: Fix spot instance cleanup to remove the correct request [GH-2327]
+  * builder/amazon: Fix `bundle_prefix` not interpolating `timestamp` [GH-2352]
+  * builder/amazon-instance: Fix issue with creating AMIs without specifying a
+      virtualization type [GH-2330]
+  * builder/digitalocean: Fix builder using private IP instead of public IP [GH-2339]
+  * builder/google: Set default communicator settings properly [GH-2353]
+  * builder/vmware-iso: Setting `checksum_type` to `none` for ESX builds
+      now works [GH-2323]
+  * provisioner/chef: Use knife config file vs command-line params to
+      clean up nodes so full set of features can be used [GH-2306]
+  * post-processor/compress: Fixed crash in compress post-processor plugin [GH-2311]
+
+## 0.8.0 (June 23, 2015)
 
 BACKWARDS INCOMPATIBILITIES:
 
@@ -36,6 +68,7 @@ FEATURES:
       builder. This is useful for provisioners. [GH-2232]
   * **New config function: `template_dir`**: The directory to the template
       being built. This should be used for template-relative paths. [GH-54]
+  * **New provisioner: shell-local**: Runs a local shell script. [GH-770]
   * **New provisioner: powershell**: Provision Windows machines
       with PowerShell scripts. [GH-2243]
   * **New provisioner: windows-shell**: Provision Windows machines with
@@ -49,12 +82,18 @@ FEATURES:
 IMPROVEMENTS:
 
   * core: Interrupt handling for SIGTERM signal as well. [GH-1858]
+  * core: HTTP downloads support resuming [GH-2106]
   * builder/*: Add `ssh_handshake_attempts` to configure the number of
       handshake attempts done before failure [GH-2237]
   * builder/amazon: Add `force_deregister` option for automatic AMI
       deregistration [GH-2221]
   * builder/amazon: Now applies tags to EBS snapshots [GH-2212]
+  * builder/amazon: Clean up orphaned volumes from Source AMIs [GH-1783]
   * builder/amazon: Support custom keypairs [GH-1837]
+  * builder/amazon-chroot: Can now resize the root volume of the resulting
+      AMI with the `root_volume_size` option [GH-2289]
+  * builder/amazon-chroot: Add `mount_options` configuration option for providing
+      options to the `mount` command [GH-2296]
   * builder/digitalocean: Save SSH key to pwd if debug mode is on. [GH-1829]
   * builder/digitalocean: User data support [GH-2113]
   * builder/googlecompute: Option to use internal IP for connections. [GH-2152]
@@ -68,6 +107,7 @@ IMPROVEMENTS:
   * builder/openstack: Machine will be stopped prior to imaging if the
       cluster supports the `startstop` extension. [GH-2223]
   * builder/openstack: Support for user data [GH-2224]
+  * builder/qemu: Default accelerator to "tcg" on Windows [GH-2291]
   * builder/virtualbox: Added option: `ssh_skip_nat_mapping` to skip the
       automatic port forward for SSH and to use the guest port directly. [GH-1078]
   * builder/virtualbox: Added SCSI support

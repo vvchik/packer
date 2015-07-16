@@ -43,7 +43,7 @@ func (s *StepRunSourceInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	securityGroupIds := make([]*string, len(tempSecurityGroupIds))
 	for i, sg := range tempSecurityGroupIds {
-		securityGroupIds[i] = &sg
+		securityGroupIds[i] = aws.String(sg)
 	}
 
 	userData := s.UserData
@@ -256,7 +256,7 @@ func (s *StepRunSourceInstance) Run(state multistep.StateBag) multistep.StepActi
 	ec2Tags := make([]*ec2.Tag, 1, len(s.Tags)+1)
 	ec2Tags[0] = &ec2.Tag{Key: aws.String("Name"), Value: aws.String("Packer Builder")}
 	for k, v := range s.Tags {
-		ec2Tags = append(ec2Tags, &ec2.Tag{Key: &k, Value: &v})
+		ec2Tags = append(ec2Tags, &ec2.Tag{Key: aws.String(k), Value: aws.String(v)})
 	}
 
 	_, err = ec2conn.CreateTags(&ec2.CreateTagsInput{
@@ -296,7 +296,7 @@ func (s *StepRunSourceInstance) Cleanup(state multistep.StateBag) {
 	if s.spotRequest != nil {
 		ui.Say("Cancelling the spot request...")
 		input := &ec2.CancelSpotInstanceRequestsInput{
-			SpotInstanceRequestIDs: []*string{s.spotRequest.InstanceID},
+			SpotInstanceRequestIDs: []*string{s.spotRequest.SpotInstanceRequestID},
 		}
 		if _, err := ec2conn.CancelSpotInstanceRequests(input); err != nil {
 			ui.Error(fmt.Sprintf("Error cancelling the spot request, may still be around: %s", err))
