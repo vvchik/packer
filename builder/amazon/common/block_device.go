@@ -1,6 +1,8 @@
 package common
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/mitchellh/packer/template/interpolate"
@@ -30,26 +32,29 @@ func buildBlockDevices(b []BlockDevice) []*ec2.BlockDeviceMapping {
 	for _, blockDevice := range b {
 		ebsBlockDevice := &ec2.EBSBlockDevice{
 			VolumeType:          aws.String(blockDevice.VolumeType),
-			VolumeSize:          aws.Long(blockDevice.VolumeSize),
-			DeleteOnTermination: aws.Boolean(blockDevice.DeleteOnTermination),
+			VolumeSize:          aws.Int64(blockDevice.VolumeSize),
+			DeleteOnTermination: aws.Bool(blockDevice.DeleteOnTermination),
 		}
 
 		// IOPS is only valid for SSD Volumes
 		if blockDevice.VolumeType != "" && blockDevice.VolumeType != "standard" && blockDevice.VolumeType != "gp2" {
-			ebsBlockDevice.IOPS = aws.Long(blockDevice.IOPS)
+			ebsBlockDevice.IOPS = aws.Int64(blockDevice.IOPS)
 		}
 
 		// You cannot specify Encrypted if you specify a Snapshot ID
 		if blockDevice.SnapshotId != "" {
 			ebsBlockDevice.SnapshotID = aws.String(blockDevice.SnapshotId)
 		} else if blockDevice.Encrypted {
-			ebsBlockDevice.Encrypted = aws.Boolean(blockDevice.Encrypted)
+			ebsBlockDevice.Encrypted = aws.Bool(blockDevice.Encrypted)
 		}
 
 		mapping := &ec2.BlockDeviceMapping{
-			EBS:         ebsBlockDevice,
 			DeviceName:  aws.String(blockDevice.DeviceName),
 			VirtualName: aws.String(blockDevice.VirtualName),
+		}
+
+		if !strings.HasPrefix(blockDevice.VirtualName, "ephemeral") {
+			mapping.EBS = ebsBlockDevice
 		}
 
 		if blockDevice.NoDevice {
