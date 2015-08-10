@@ -291,6 +291,7 @@ $textFile = "$isoFolder\Autounattend.xml"
 
 $c = Get-Content -Encoding UTF8 $textFile
 
+# Enable UEFI and disable Non EUFI
 $c | % { $_ -replace '<!-- Start Non UEFI -->','<!-- Start Non UEFI' } | % { $_ -replace '<!-- Finish Non UEFI -->','Finish Non UEFI -->' } | % { $_ -replace '<!-- Start UEFI compatible','<!-- Start UEFI compatible -->' } | % { $_ -replace 'Finish UEFI compatible -->','<!-- Finish UEFI compatible -->' } | sc -Path $textFile
 
 & .\mkisofs.exe -r -iso-level 4 -UDF -o windows\windows-2012R2-serverdatacenter-amd64\answer.iso $isoFolder
@@ -544,8 +545,8 @@ Finish Setup cache proxy during installation -->
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <AutoLogon>
                 <Password>
-                    <Value>dgBhAGcAcgBhAG4AdABQAGEAcwBzAHcAbwByAGQA</Value>
-                    <PlainText>false</PlainText>
+                    <Value>vagrant</Value>
+                    <PlainText>true</PlainText>
                 </Password>
                 <Enabled>true</Enabled>
                 <Username>vagrant</Username>
