@@ -248,7 +248,10 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 			HTTPPortMax: b.config.HTTPPortMax,
 		},
 		new(vboxcommon.StepSuppressMessages),
-		new(stepCreateVM),
+		&StepCreateVM{
+			VMName  : b.config.VMName,
+			Ctx		: b.config.ctx,
+		},		
 		new(stepCreateDisk),
 		new(stepAttachISO),
 		&vboxcommon.StepAttachGuestAdditions{
@@ -271,7 +274,6 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 		},
 		&vboxcommon.StepTypeBootCommand{
 			BootCommand: b.config.BootCommand,
-			VMName:      b.config.VMName,
 			Ctx:         b.config.ctx,
 		},
 		&communicator.StepConnect{
@@ -279,6 +281,7 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 			Host:      vboxcommon.CommHost,
 			SSHConfig: vboxcommon.SSHConfigFunc(b.config.SSHConfig),
 			SSHPort:   vboxcommon.SSHPort,
+			WinRMPort: vboxcommon.WinRMPort,
 		},
 		&vboxcommon.StepUploadVersion{
 			Path: b.config.VBoxVersionFile,

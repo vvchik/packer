@@ -8,20 +8,23 @@ import (
 )
 
 func CommHost(state multistep.StateBag) (string, error) {
-	return "127.0.0.1", nil
+	vmName := state.Get("vmName").(string)
+	driver := state.Get("driver").(Driver)
+
+	mac, err := driver.Mac(vmName)
+	if err != nil {
+		return "", err
+	}
+
+	ip, err := driver.IpAddress(mac)
+	if err != nil {
+		return "", err
+	}
+
+	return ip, nil
 }
 
-func SSHPort(state multistep.StateBag) (int, error) {
-	sshHostPort := state.Get("sshHostPort").(int)
-	return int(sshHostPort), nil
-}
-
-func WinRMPort(state multistep.StateBag) (int, error) {
-	winRMHostPort := state.Get("sshHostPort").(uint)
-	return int(winRMHostPort), nil
-}
-
-func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConfig, error) {
+func SSHConfigFunc(config *SSHConfig) func(multistep.StateBag) (*gossh.ClientConfig, error) {
 	return func(state multistep.StateBag) (*gossh.ClientConfig, error) {
 		auth := []gossh.AuthMethod{
 			gossh.Password(config.Comm.SSHPassword),
@@ -29,7 +32,7 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 				ssh.PasswordKeyboardInteractive(config.Comm.SSHPassword)),
 		}
 
-		if config.SSHKeyPath != "" {
+		if config.Comm.SSHPrivateKey != "" {
 			signer, err := commonssh.FileSigner(config.Comm.SSHPrivateKey)
 			if err != nil {
 				return nil, err

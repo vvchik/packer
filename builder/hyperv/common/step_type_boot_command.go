@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -13,15 +12,14 @@ import (
 	"github.com/mitchellh/packer/template/interpolate"
 )
 
-const KeyLeftShift uint32 = 0xFFE1
-
 type bootCommandTemplateData struct {
 	HTTPIP   string
 	HTTPPort uint
 	Name     string
 }
 
-// This step "types" the boot command into the VM over VNC.
+// This step "types" the boot command into the VM via the prltype script, built on the
+// Parallels Virtualization SDK - Python API.
 //
 // Uses:
 //   driver Driver
@@ -33,24 +31,39 @@ type bootCommandTemplateData struct {
 //   <nothing>
 type StepTypeBootCommand struct {
 	BootCommand []string
+	SwitchName  string
 	Ctx         interpolate.Context
 }
 
 func (s *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
-	driver := state.Get("driver").(Driver)
 	httpPort := state.Get("http_port").(uint)
 	ui := state.Get("ui").(packer.Ui)
+	driver := state.Get("driver").(Driver)
 	vmName := state.Get("vmName").(string)
 
+	hostIp, err := driver.GetHostAdapterIpAddressForSwitch(s.SwitchName)
+
+	if err != nil {
+		err := fmt.Errorf("Error getting host adapter ip address: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	ui.Say(fmt.Sprintf("Host IP for the HyperV machine: %s", hostIp))
+
 	s.Ctx.Data = &bootCommandTemplateData{
-		"10.0.2.2",
+		hostIp,
 		httpPort,
 		vmName,
 	}
 
 	ui.Say("Typing the boot command...")
+	scanCodesToSend := []string{}
+
 	for _, command := range s.BootCommand {
 		command, err := interpolate.Render(command, &s.Ctx)
+
 		if err != nil {
 			err := fmt.Errorf("Error preparing boot command: %s", err)
 			state.Put("error", err)
@@ -58,35 +71,16 @@ func (s *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction
 			return multistep.ActionHalt
 		}
 
-		for _, code := range scancodes(command) {
-			if code == "wait" {
-				time.Sleep(1 * time.Second)
-				continue
-			}
+		scanCodesToSend = append(scanCodesToSend, scancodes(command)...)
+	}
 
-			if code == "wait5" {
-				time.Sleep(5 * time.Second)
-				continue
-			}
+	scanCodesToSendString := strings.Join(scanCodesToSend, " ")
 
-			if code == "wait10" {
-				time.Sleep(10 * time.Second)
-				continue
-			}
-
-			// Since typing is sometimes so slow, we check for an interrupt
-			// in between each character.
-			if _, ok := state.GetOk(multistep.StateCancelled); ok {
-				return multistep.ActionHalt
-			}
-
-			if err := driver.VBoxManage("controlvm", vmName, "keyboardputscancode", code); err != nil {
-				err := fmt.Errorf("Error sending boot command: %s", err)
-				state.Put("error", err)
-				ui.Error(err.Error())
-				return multistep.ActionHalt
-			}
-		}
+	if err := driver.TypeScanCodes(vmName, scanCodesToSendString); err != nil {
+		err := fmt.Errorf("Error sending boot command: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
 	}
 
 	return multistep.ActionContinue

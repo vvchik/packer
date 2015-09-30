@@ -116,11 +116,11 @@ func (p *Provisioner) Prepare(raws ...interface{}) error {
 	}
 
 	if p.config.ElevatedEnvVarFormat == "" {
-		p.config.ElevatedEnvVarFormat = `$env:%s="%s"; `
+		p.config.ElevatedEnvVarFormat = `$env:%s=\"%s\"; `
 	}
 
 	if p.config.ExecuteCommand == "" {
-		p.config.ExecuteCommand = `powershell "& { {{.Vars}}{{.Path}}; exit $LastExitCode}"`
+		p.config.ExecuteCommand = `powershell '& { {{.Vars}}{{.Path}}; exit $LastExitCode}'`
 	}
 
 	if p.config.ElevatedExecuteCommand == "" {
@@ -347,8 +347,9 @@ func (p *Provisioner) createFlattenedEnvVars(elevated bool) (flattened string, e
 	// Split vars into key/value components
 	for _, envVar := range p.config.Vars {
 		keyValue := strings.Split(envVar, "=")
-		if len(keyValue) != 2 {
-			err = errors.New("Shell provisioner environment variables must be in key=value format")
+		
+		if len(keyValue) != 2 || keyValue[0] == "" {
+			err = errors.New(fmt.Sprintf("Shell provisioner environment variables must be in key=value format. Currently it is '%s'", envVar))
 			return
 		}
 		envVars[keyValue[0]] = keyValue[1]
