@@ -11,12 +11,12 @@ import (
 	"github.com/mitchellh/packer/powershell/hyperv"
 )
 
-
-const(
-	vlanId = "1724"
-)
+//const(
+//	vlanId = "1724"
+//)
 
 type StepConfigureVlan struct {
+	VlanId string
 }
 
 func (s *StepConfigureVlan) Run(state multistep.StateBag) multistep.StepAction {
@@ -26,10 +26,12 @@ func (s *StepConfigureVlan) Run(state multistep.StateBag) multistep.StepAction {
 
 	errorMsg := "Error configuring vlan: %s"
 	vmName := state.Get("vmName").(string)
-	switchName := state.Get("SwitchName").(string)
+	//switchName := state.Get("SwitchName").(string)
 
 	ui.Say("Configuring vlan...")
 
+	/* This block is dangerous, set vlan ID on Switch level may block access to
+	   * whole Hyper-V host, should be configurefd via SwitchVlanId param in future
 	err := hyperv.SetNetworkAdapterVlanId(switchName, vlanId)
 	if err != nil {
 		err := fmt.Errorf(errorMsg, err)
@@ -37,8 +39,14 @@ func (s *StepConfigureVlan) Run(state multistep.StateBag) multistep.StepAction {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
+	*/
 
-	err = hyperv.SetVirtualMachineVlanId(vmName, vlanId)
+	if s.VlanId == "" {
+		ui.Say("Coundn't config vlan ... ")
+	}
+
+	// change vlanid param
+	err := hyperv.SetVirtualMachineVlanId(vmName, s.VlanId)
 	if err != nil {
 		err := fmt.Errorf(errorMsg, err)
 		state.Put("error", err)

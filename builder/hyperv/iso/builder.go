@@ -97,6 +97,7 @@ type Config struct {
 
 	BootCommand      []string `mapstructure:"boot_command"`
 	SwitchName       string   `mapstructure:"switch_name"`
+	VlanId           string   `mapstructure:"vlan_id"`
 	Cpu              uint     `mapstructure:"cpu"`
 	Generation       uint     `mapstructure:"generation"`
 	EnableSecureBoot bool     `mapstructure:"enable_secure_boot"`
@@ -163,6 +164,10 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 		}
 	}
 
+	if b.config.VlanId == "" {
+		//	b.config.VlanId = "1724"
+	}
+
 	if b.config.Cpu < 1 {
 		b.config.Cpu = 1
 	}
@@ -180,6 +185,7 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 
 	log.Println(fmt.Sprintf("Using switch %s", b.config.SwitchName))
 	log.Println(fmt.Sprintf("%s: %v", "SwitchName", b.config.SwitchName))
+	log.Println(fmt.Sprintf("Using vlan %s", b.config.VlanId))
 
 	if b.config.Communicator == "" {
 		b.config.Communicator = "ssh"
@@ -300,6 +306,9 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 			Generation:      b.config.Generation,
 			Cpu:             b.config.Cpu,
 			EnabeSecureBoot: b.config.EnableSecureBoot,
+		},
+		&hypervcommon.StepConfigureVlan{
+			VlanId: b.config.VlanId,
 		},
 		&hypervcommon.StepEnableIntegrationService{},
 
